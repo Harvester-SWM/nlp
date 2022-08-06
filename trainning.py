@@ -2,6 +2,8 @@ from gc import callbacks
 import os
 import sys
 import argparse
+import errno
+
 
 import pandas as pd
 import numpy as np
@@ -30,24 +32,6 @@ from soynlp.normalizer import repeat_normalize
 
 
 tpu_cores: int = 0  # Enable TPU with 1 core or 8 cores
-
-checkpoint_callback = ModelCheckpoint(
-    save_top_k=2,
-    monitor="val_loss",
-    mode="min",
-    dirpath="./mypath",
-    filename="works"
-)
-
-early_stop_callback = EarlyStopping(
-    monitor="val_loss",
-    min_delta=0.1,
-    patience=2,
-    verbose=True,
-    mode="min",
-    check_on_train_epoch_end=True
-)
-
 #def loss_fn(outputs, targets):
 #    return torch.nn.BCEWithLogitsLoss()(outputs, targets)
 
@@ -159,7 +143,7 @@ class Model(LightningModule):
         for idx ,x in enumerate(confusion_mat):
           acc =  (x[0][0] + x[1][1]) / (x[0][0] + x[0][1] + x[1][0] + x[1][1]) if (x[0][0] + x[0][1] + x[1][0] + x[1][1]) > 0 else 0
           prec =  x[1][1] / (x[0][1] + x[1][1])  if (x[0][1] + x[1][1]) > 0 else 0
-          rec = x[1][1] / (x[1][0] + x[1][1]) if (x[0][1] + x[1][1]) > 0 else 0
+          rec = x[1][1] / (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) > 0 else 0
           f1 = 2 * rec * prec / (rec + prec) if (rec + prec) > 0 else 0
           print(f'class {idx : .5f} |  acc : {acc : .5f} | prec : {prec : .5f} | rec : {rec : .5f} | f1 : {f1 : .5f}')
 
@@ -303,6 +287,7 @@ class Model(LightningModule):
     
 
 if __name__ == "__main__":
+    
     ''' 이 파일의 전체 변수 '''
     args = {
     'random_seed': 42, # Random Seed
@@ -321,6 +306,7 @@ if __name__ == "__main__":
     'tpu_cores': 0,  # Enable TPU with 1 core or 8 cores
     'cpu_workers': os.cpu_count(),
     'n_classes' : 11,
+    'test_name' : ''
     }
     
 
@@ -343,24 +329,41 @@ if __name__ == "__main__":
     parser.add_argument('--val_data_path', type=str, default='./data/valid.tsv', help='validation file path')
     parser.add_argument('--result_file', type=str, default='result.txt', help='path and name of result file')
     parser.add_argument('--optimizer', type=str, default='AdamW', help='type of optimizer')
+    parser.add_argument('--test_name', type=str, default='no_name', help='실험 이름 / directory 로 사용한다')
 
 
     user_input = parser.parse_args()
 
 
-    ''' user_input을 통해 받은 인자를 순회하면서 args에 넣어준다 '''
+    # user_input을 통해 받은 인자를 순회하면서 args에 넣어준다
     for arg in vars(user_input):
         temp = getattr(user_input, arg)
         args[arg] = temp
     
+    #check point 와 early_stop_callback을 설정해 준다.
+    checkpoint_callback = ModelCheckpoint(
+        save_top_k=2,
+        monitor="val_loss",
+        mode="min",
+        dirpath=f"./checkpoint/{args['test_name']}",
+        filename="{epoch}-{val_loss:.2f}-{step}"
+    )
 
+    early_stop_callback = EarlyStopping(
+        monitor="val_loss",
+        min_delta=0.00,
+        patience=2,
+        verbose=True,
+        mode="min",
+        check_on_train_epoch_end=True
+    )
     
     #argument value check
     #for key, value in args.items():
     #     print(f'key : {key} | value : {value}')
     
 
-    '''모델 실행'''
+    #모델 실행
     model = Model(**args)
     trainer = Trainer(
         max_epochs=args['epochs'],
@@ -385,7 +388,15 @@ if __name__ == "__main__":
     if MODEL_TEST == True:
         exit()
     
-    result = open(args['result_file'], 'w')
+    # make file directory
+    try:
+        os.makedirs(f"./checkpoint/{args['test_name']}")
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(f"./checkpoint/{args['test_name']}"):
+            pass
+        else: raise
+
+    result = open(f"./checkpoint/{args['test_name']}/{args['result_file']}", 'w')
 
     print(f"args.batch_size : {args['batch_size']} | lr : {args['lr']} | epoches : {args['epochs']} | optimizer : {args['optimizer']}", file=result)
 

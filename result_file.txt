@@ -1,0 +1,1 @@
+args.batch_size : 10 | lr : 5e-06 | epoches : 5 | optimizer : AdamW

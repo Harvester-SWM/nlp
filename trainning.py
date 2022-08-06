@@ -32,13 +32,21 @@ from soynlp.normalizer import repeat_normalize
 tpu_cores: int = 0  # Enable TPU with 1 core or 8 cores
 
 checkpoint_callback = ModelCheckpoint(
-    save_top_k=1,
-    monitor="val_acc",
-    mode="max",
-    dirpath="",
-    filename="works",
+    save_top_k=2,
+    monitor="val_loss",
+    mode="min",
+    dirpath="./mypath",
+    filename="works"
 )
-early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=0.00, patience=2, verbose=True, mode="min")
+
+early_stop_callback = EarlyStopping(
+    monitor="val_loss",
+    min_delta=0.1,
+    patience=2,
+    verbose=True,
+    mode="min",
+    check_on_train_epoch_end=True
+)
 
 #def loss_fn(outputs, targets):
 #    return torch.nn.BCEWithLogitsLoss()(outputs, targets)
@@ -95,10 +103,6 @@ class Model(LightningModule):
         loss ,output = self(input_ids=data, attention_mask=attention_mask, labels=labels)
         
         # Transformers 4.0.0+
-        #print("output")
-        #print(output)
-        #print("loss")
-        #print(loss)
         #self.log("train_loss", loss, prog_bar=True, logger=True)
 
         #loss = output.loss
@@ -153,10 +157,10 @@ class Model(LightningModule):
         confusion_mat = multilabel_confusion_matrix(y_true, y_pred)
 
         for idx ,x in enumerate(confusion_mat):
-          acc = (x[0][0] + x[1][1]) / (x[0][0] + x[0][1] + x[1][0] + x[1][1])
-          prec = x[1][1] / (x[0][1] + x[1][1])
-          rec = x[1][1] / (x[1][0] + x[1][1])
-          f1 = 2 * rec * prec / (rec + prec)
+          acc =  (x[0][0] + x[1][1]) / (x[0][0] + x[0][1] + x[1][0] + x[1][1]) if (x[0][0] + x[0][1] + x[1][0] + x[1][1]) > 0 else 0
+          prec =  x[1][1] / (x[0][1] + x[1][1])  if (x[0][1] + x[1][1]) > 0 else 0
+          rec = x[1][1] / (x[1][0] + x[1][1]) if (x[0][1] + x[1][1]) > 0 else 0
+          f1 = 2 * rec * prec / (rec + prec) if (rec + prec) > 0 else 0
           print(f'class {idx : .5f} |  acc : {acc : .5f} | prec : {prec : .5f} | rec : {rec : .5f} | f1 : {f1 : .5f}')
 
         #print(y_true)
@@ -251,18 +255,14 @@ class Model(LightningModule):
 
         #print(df['문장'][:, 0])
         #print(df['문장'][:, 1])
-        # 여기서 어캐 __call__ function 부를지 생각해야함
+        
         # 문장은 input_ids 로 return 해주고 
         #print("리턴 타입 텐서 아니라 list다!")
+        
         #print(type(attention_mask))
         #print(df['문장'][0].shape)
         #print(attention_mask[0].shape)
         
-        #print(type(df['문장']))
-        #print(df['문장'])
-        #print(type(attention))
-        #print(attention)
-        #print(test)
         return attention_mask
 
     def dataloader(self, path, shuffle=False):
@@ -320,7 +320,6 @@ if __name__ == "__main__":
     'fp16': True,  # Enable train on FP16(if GPU)
     'tpu_cores': 0,  # Enable TPU with 1 core or 8 cores
     'cpu_workers': os.cpu_count(),
-    #'callbacks': [checkpoint_callback]
     'n_classes' : 11,
     }
     
@@ -336,15 +335,17 @@ if __name__ == "__main__":
     '''
     parser = argparse.ArgumentParser(description="usage")
 
+
     parser.add_argument('--batch_size', type=int, default=4, help='size of batch')
-    parser.add_argument('--lr', type=float, default=5e-6, help='size of batch')
-    parser.add_argument('--epochs', type=int, default=5, help='size of batch')
-    parser.add_argument('--train_data_path', type=str, default='train.tsv', help='size of batch')
-    parser.add_argument('--val_data_path', type=str, default='valid.tsv', help='size of batch')
-    parser.add_argument('--result_file', type=str, default='result.txt', help='size of batch')
+    parser.add_argument('--lr', type=float, default=5e-6, help='number of learning rate')
+    parser.add_argument('--epochs', type=int, default=5, help='number of epochs')
+    parser.add_argument('--train_data_path', type=str, default='./data/train.tsv', help='train file path')
+    parser.add_argument('--val_data_path', type=str, default='./data/valid.tsv', help='validation file path')
+    parser.add_argument('--result_file', type=str, default='result.txt', help='path and name of result file')
+    parser.add_argument('--optimizer', type=str, default='AdamW', help='type of optimizer')
+
 
     user_input = parser.parse_args()
-
 
 
     ''' user_input을 통해 받은 인자를 순회하면서 args에 넣어준다 '''
@@ -370,7 +371,7 @@ if __name__ == "__main__":
         gpus=-1 if torch.cuda.is_available() else None,
         precision=16 if args['fp16'] else 32,
         progress_bar_refresh_rate=30,
-        callbacks = [early_stop_callback]
+        callbacks = [early_stop_callback, checkpoint_callback]
         #callback?
         # For TPU Setup
         # tpu_cores=args.tpu_cores if args.tpu_cores else None,
@@ -380,8 +381,6 @@ if __name__ == "__main__":
     MODEL_TEST = False
     
     # 토크나이저나 그런거 테스트 하는 공간
-    # 
-    #
     
     if MODEL_TEST == True:
         exit()

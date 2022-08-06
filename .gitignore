@@ -152,8 +152,11 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-#ckpt
+#log file
 lightning_logs/
+
+#ckpt
+*.ckpt
 
 #tsv
 *.tsv

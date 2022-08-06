@@ -12,14 +12,15 @@ import trainning
 
 
 MODEL_PATH = "./lightning_logs/version_2/checkpoints/*.ckpt"
-HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
+#HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
 
 from glob import glob
 
 LABEL_COLUMNS=["욕설","모욕","폭력위협/범죄조장","외설","성혐오","연령","인종/출신지","장애","종교","정치성향","직업혐오"]
 
 latest_ckpt = sorted(glob(MODEL_PATH))[0]
-model = trainning.Model.load_from_checkpoint(latest_ckpt, hparams_file=HPARAMS_PATH)
+#model = trainning.Model.load_from_checkpoint(latest_ckpt, hparams_file=HPARAMS_PATH)
+model = trainning.Model.load_from_checkpoint(latest_ckpt)
 
 model.eval()
 #map location 해주면 환경 바뀌어도 가능

@@ -257,7 +257,7 @@ class Model(LightningModule):
         #일단 df에서 다 0 아니면 1로 만들어준다
 
         for i in LABEL_COLUMNS:
-            df[i] = df[i].map(lambda x : 0 if x < 2 else 1)
+            df[i] = df[i].map(lambda x : 0 if x == 0 else 1)
 
         
         #print("temp ahead")

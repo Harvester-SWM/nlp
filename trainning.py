@@ -64,7 +64,7 @@ class Model(LightningModule):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
 
         #print(self.tokenizer())
-        output_2 = self.bert(input_ids, attention_mask=attention_mask)
+        output_2 = self.bert(input_ids, attention_mask=attention_mask) 
         #self.dropout = nn.Dropout(config.hidden_dropout_prob)
         #print(output_1)
         output_1 = self.line(output_2.pooler_output) # 모델의 결과 값
@@ -78,13 +78,13 @@ class Model(LightningModule):
         return loss, output
 
     def step(self, batch, batch_idx):
-        data, labels, attention_mask = batch
+        data, labels, attention_mask = batch # 여기가 270번 째 줄에 있는 tuple 에 있는 거를 unpacking하는 거임 
 
         #print(data[0].shape)
         #print(labels[0].shape)
         #print(attention_mask[0].shape)
 
-        loss ,output = self(input_ids=data, attention_mask=attention_mask, labels=labels)
+        loss ,output = self(input_ids=data, attention_mask=attention_mask, labels=labels) # 여기도 바뀌어야 할 듯 81 번이 바뀌니까
         
         # Transformers 4.0.0+
         #self.log("train_loss", loss, prog_bar=True, logger=True)

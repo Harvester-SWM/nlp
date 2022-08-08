@@ -50,8 +50,8 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
-        self.drop = torch.nn.Dropout(0.3) #forward에서 적용하셈 이거 있어야 할 듯 
+        self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
+        self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 1)
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
@@ -59,13 +59,16 @@ class Model(LightningModule):
             else self.hparams.pretrained_model
         )
 
-    def forward(self, input_ids, labels=None, **kwargs):
+    def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
         
-        return self.newbert(input_ids=input_ids, labels=labels)
+        #self.main_bert(input_ids=input_ids, labels=main_labels)
+        #self.sub_bert(input_ids=input_ids, labels=sub_labels)
+        
+        return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):
-        data, labels = batch
+        data, main_labels, sub_labels = batch
 
 
         #print(data[0].shape)
@@ -73,11 +76,12 @@ class Model(LightningModule):
         #print(attention_mask[0].shape)
 
 
-        output = self(input_ids=data, labels=labels)
-
+        main_output, sub_output = self(input_ids=data, main_labels=main_labels, sub_labels=sub_labels)
         
-        loss = output.loss
-        logits = output.logits
+        main_loss = main_output.loss
+        main_logits = main_output.logits
+
+        sub_loss = sub_output.loss
 
         # Transformers 4.0.0+
         #self.log("train_loss", loss, prog_bar=True, logger=True)
@@ -86,8 +90,8 @@ class Model(LightningModule):
         #logits = output.logits
         
         #preds = output.argmax(dim=-1)
-        y_true = labels.detach().cpu().numpy()
-        y_pred = logits.detach().cpu().numpy()
+        y_true = main_labels.detach().cpu().numpy()
+        y_pred = main_logits.detach().cpu().numpy()
         #print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}, Acc: {acc}, Prec: {prec}, Rec: {rec}, F1: {f1}')
 
         #print("y_true")
@@ -97,7 +101,7 @@ class Model(LightningModule):
         #print(y_pred)
 
         return {
-            'loss': loss,
+            'loss': main_loss + sub_loss,
             'y_true': y_true,
             'y_pred': y_pred,
         }
@@ -220,11 +224,39 @@ class Model(LightningModule):
         
         return df
 
+    def subDataframe(self, main_df):
+        write_list = []
+        LABEL_COLUMNS = main_df.columns.tolist()[1:]
+        
+        for index, row in main_df.iterrows():
+            #print(row)
+            result = 0
+            for i in LABEL_COLUMNS:
+                if row[i] > 0:
+                    result = 1
+                    break
+            #print(row['내용'], result)
+            
+            temp = [result]
+            write_list.append(temp)
+
+
+        return pd.DataFrame(write_list, columns=['악플'])
+
     def dataloader(self, path, shuffle=False):
         main_df = self.read_data(path)
         main_df = self.preprocess_dataframe(main_df)
         LABEL_COLUMNS = main_df.columns.tolist()[1:]
+
+        sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
         
+        print(main_df[LABEL_COLUMNS])
+        print(sub_df)
+
+        
+        print(type(main_df[LABEL_COLUMNS]))
+        print(type(sub_df))
+
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
             main_df[i] = main_df[i].map(lambda x : 0 if x == 0 else 1)
@@ -238,6 +270,7 @@ class Model(LightningModule):
         dataset = TensorDataset(
             torch.tensor(main_df['내용'].to_list(), dtype=torch.long),
             torch.tensor(main_df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
+            torch.tensor(sub_df.values.tolist(), dtype=torch.float),
         )
         return DataLoader(
             dataset,

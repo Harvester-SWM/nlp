@@ -50,7 +50,7 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, return_dict=True, num_labels = 11)
+        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11)
         self.drop = torch.nn.Dropout(0.3) #forward에서 적용하셈 이거 있어야 할 듯 
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -200,18 +200,6 @@ class Model(LightningModule):
         x = repeat_normalize(x, num_repeats=2)
         return x
 
-    def convert(self, x, **kwargs):
-        return self.tokenizer(
-            self.clean(str(x)),
-            add_special_tokens=True,
-            max_length=self.hparams.max_length,
-            return_token_type_ids=False,
-            padding='max_length',
-            truncation=True,
-            return_attention_mask=True,
-            **kwargs,
-        )
-
     def encode(self, x, **kwargs):
         return self.tokenizer.encode(
                 self.clean(str(x)),
@@ -223,37 +211,29 @@ class Model(LightningModule):
 
     def preprocess_dataframe(self, df):
         df['내용'] = df['내용'].map(self.encode)
-        #temp = temp.to_list()        
         # 문장은 input_ids 로 return 해주고 
         #print("리턴 타입 텐서 아니라 list다!")
-        
-        #print(type(attention_mask))
-        #print(df['문장'][0].shape)
-        #print(attention_mask[0].shape)
         
         return df
 
     def dataloader(self, path, shuffle=False):
-        df = self.read_data(path)
-        df = self.preprocess_dataframe(df)
-        LABEL_COLUMNS = df.columns.tolist()[1:]
+        main_df = self.read_data(path)
+        main_df = self.preprocess_dataframe(main_df)
+        LABEL_COLUMNS = main_df.columns.tolist()[1:]
         
         #일단 df에서 다 0 아니면 1로 만들어준다
-
         for i in LABEL_COLUMNS:
-            df[i] = df[i].map(lambda x : 0 if x == 0 else 1)
-
-        
-        #print("temp ahead")
-        #print(type(temp))
-        #print(temp["문장"][0]['input_ids'])
-        #print(temp["문장"][0]['attention_mask'])
+            main_df[i] = main_df[i].map(lambda x : 0 if x == 0 else 1)
 
         #print(df.columns)
 
+        ## 2차 데이터를 만든다.
+
+
+
         dataset = TensorDataset(
-            torch.tensor(df['내용'].to_list(), dtype=torch.long),
-            torch.tensor(df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
+            torch.tensor(main_df['내용'].to_list(), dtype=torch.long),
+            torch.tensor(main_df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
         )
         return DataLoader(
             dataset,

@@ -32,16 +32,8 @@ def main():
         judge(sentence=sentence)
     
 def infer(x):
-    temp  = model.tokenizer(x, 
-                            add_special_tokens=True, 
-                            max_length=300, 
-                            return_token_type_ids=False, 
-                            padding="max_length",
-                            return_attention_mask=True, 
-                            return_tensors='pt'
-                            )
-    return model(temp["input_ids"], temp["attention_mask"])
-
+    return model(**model.tokenizer(x, return_tensors='pt'))
+    
 def judge(sentence):
     if sentence == "":
         print("빈 문장")

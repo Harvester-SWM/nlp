@@ -61,16 +61,20 @@ class Model(LightningModule):
 
     def forward(self, input_ids, labels=None, **kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
+        
         return self.newbert(input_ids=input_ids, labels=labels)
 
     def step(self, batch, batch_idx):
         data, labels = batch
 
+
         #print(data[0].shape)
         #print(labels[0].shape)
         #print(attention_mask[0].shape)
 
+
         output = self(input_ids=data, labels=labels)
+
         
         loss = output.loss
         logits = output.logits

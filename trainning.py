@@ -51,7 +51,7 @@ class Model(LightningModule):
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
         self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
-        self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model)
+        self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 1)
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
@@ -62,9 +62,9 @@ class Model(LightningModule):
     def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
         
-        self.main_bert(input_ids=input_ids, labels=main_labels)
-        self.sub_bert(input_ids=input_ids, labels=sub_labels)
-        return 
+        #self.main_bert(input_ids=input_ids, labels=main_labels)
+        #self.sub_bert(input_ids=input_ids, labels=sub_labels)
+        
         return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):

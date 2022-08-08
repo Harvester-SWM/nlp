@@ -50,7 +50,7 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11)
+        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
         self.drop = torch.nn.Dropout(0.3) #forward에서 적용하셈 이거 있어야 할 듯 
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(

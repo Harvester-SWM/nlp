@@ -61,10 +61,6 @@ class Model(LightningModule):
 
     def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
-        
-        #self.main_bert(input_ids=input_ids, labels=main_labels)
-        #self.sub_bert(input_ids=input_ids, labels=sub_labels)
-        
         return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):
@@ -101,7 +97,7 @@ class Model(LightningModule):
         #print(y_pred)
 
         return {
-            'loss': main_loss + sub_loss,
+            'loss':  main_loss + sub_loss if self.hparams.model_task == 'multi' else main_loss,
             'y_true': y_true,
             'y_pred': y_pred,
         }
@@ -174,8 +170,11 @@ class Model(LightningModule):
         elif self.hparams.optimizer == 'AdamP':
             from adamp import AdamP
             optimizer = AdamP(self.parameters(), lr=self.hparams.lr)
+        elif self.hparams.optimizer == 'SWA':
+            from torchcontrib.optim import SWA
+            optimizer = AdamP(self.parameters(), lr=self.hparams.lr)
         else:
-            raise NotImplementedError('Only AdamW and AdamP is Supported!')
+            raise NotImplementedError('Only AdamW , AdamP and SWA is Supported!')
         if self.hparams.lr_scheduler == 'cos':
             scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=1, T_mult=2)
         elif self.hparams.lr_scheduler == 'exp':
@@ -250,12 +249,12 @@ class Model(LightningModule):
 
         sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
         
-        print(main_df[LABEL_COLUMNS])
-        print(sub_df)
+        #print(main_df[LABEL_COLUMNS])
+        #print(sub_df)
 
         
-        print(type(main_df[LABEL_COLUMNS]))
-        print(type(sub_df))
+        #print(type(main_df[LABEL_COLUMNS]))
+        #print(type(sub_df))
 
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
@@ -302,14 +301,15 @@ if __name__ == "__main__":
     'max_length': 150,  # Max Length input size
     'train_data_path': "",  # Train Dataset file 
     'val_data_path': "",  # Validation Dataset file 
-    'test_mode': True,  # Test Mode enables `fast_dev_run`
+    'test_mode': False,  # Test Mode enables `fast_dev_run`
     'optimizer': 'AdamW',  # AdamW vs AdamP
     'lr_scheduler': 'exp',  # ExponentialLR vs CosineAnnealingWarmRestarts
     'fp16': True,  # Enable train on FP16(if GPU)
     'tpu_cores': 0,  # Enable TPU with 1 core or 8 cores
     'cpu_workers': os.cpu_count(),
     'n_classes' : 11,
-    'test_name' : ''
+    'test_name' : '',
+    'model_task' : 'single'
     }
     
 
@@ -331,8 +331,11 @@ if __name__ == "__main__":
     parser.add_argument('--train_data_path', type=str, default='./data/train.tsv', help='train file path')
     parser.add_argument('--val_data_path', type=str, default='./data/valid.tsv', help='validation file path')
     parser.add_argument('--result_file', type=str, default='result.txt', help='path and name of result file')
+    parser.add_argument('--test_mode', type=bool, default=False, help='whether to turn on test')
     parser.add_argument('--optimizer', type=str, default='AdamW', help='type of optimizer')
+    parser.add_argument('--lr_scheduler', type=str, default='exp', help='type of learning scheduler')
     parser.add_argument('--test_name', type=str, default='no_name', help='실험 이름 / directory 로 사용한다')
+    parser.add_argument('--model_task', type=str, default='single', help='multitask model을 사용할지 아니면 single task model을 사용할지 결정한다')
 
 
     user_input = parser.parse_args()

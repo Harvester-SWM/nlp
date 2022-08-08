@@ -52,7 +52,6 @@ class Model(LightningModule):
         
         self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
         self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 1)
-        self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
             if self.hparams.pretrained_tokenizer

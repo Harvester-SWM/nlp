@@ -50,7 +50,7 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, )
+        self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
         self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model)
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -62,6 +62,9 @@ class Model(LightningModule):
     def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
         
+        self.main_bert(input_ids=input_ids, labels=main_labels)
+        self.sub_bert(input_ids=input_ids, labels=sub_labels)
+        return 
         return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):
@@ -223,6 +226,7 @@ class Model(LightningModule):
 
     def subDataframe(self, main_df):
         write_list = []
+        LABEL_COLUMNS = main_df.columns.tolist()[1:]
         
         for index, row in main_df.iterrows():
             #print(row)
@@ -237,7 +241,7 @@ class Model(LightningModule):
             write_list.append(temp)
 
 
-        return pd.DataFrame(write_list, columns=['문장', '악플'])
+        return pd.DataFrame(write_list, columns=['악플'])
 
     def dataloader(self, path, shuffle=False):
         main_df = self.read_data(path)
@@ -246,8 +250,12 @@ class Model(LightningModule):
 
         sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
         
-        print(main_df['내용'])
+        print(main_df[LABEL_COLUMNS])
         print(sub_df)
+
+        
+        print(type(main_df[LABEL_COLUMNS]))
+        print(type(sub_df))
 
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
@@ -262,7 +270,7 @@ class Model(LightningModule):
         dataset = TensorDataset(
             torch.tensor(main_df['내용'].to_list(), dtype=torch.long),
             torch.tensor(main_df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
-            torch.tensor(sub_df.to_list(), dtype=torch.float),
+            torch.tensor(sub_df.values.tolist(), dtype=torch.float),
         )
         return DataLoader(
             dataset,

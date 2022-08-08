@@ -64,7 +64,7 @@ class Model(LightningModule):
         return self.newbert(input_ids=input_ids, labels=labels)
 
     def step(self, batch, batch_idx):
-        data, labels, attention_mask = batch
+        data, labels = batch
 
         #print(data[0].shape)
         #print(labels[0].shape)
@@ -222,15 +222,8 @@ class Model(LightningModule):
         )
 
     def preprocess_dataframe(self, df):
-        temp = df['내용'].map(self.convert)
-        #temp = temp.to_list()
-        
-        df['내용'] = temp.map(lambda x: x['input_ids'])
-        attention_mask = temp.map(lambda x: x['attention_mask'])
-
-        #print(df['문장'][:, 0])
-        #print(df['문장'][:, 1])
-        
+        df['내용'] = df['내용'].map(self.encode)
+        #temp = temp.to_list()        
         # 문장은 input_ids 로 return 해주고 
         #print("리턴 타입 텐서 아니라 list다!")
         
@@ -238,11 +231,11 @@ class Model(LightningModule):
         #print(df['문장'][0].shape)
         #print(attention_mask[0].shape)
         
-        return attention_mask
+        return df
 
     def dataloader(self, path, shuffle=False):
         df = self.read_data(path)
-        attention_mask = self.preprocess_dataframe(df)
+        df = self.preprocess_dataframe(df)
         LABEL_COLUMNS = df.columns.tolist()[1:]
         
         #일단 df에서 다 0 아니면 1로 만들어준다
@@ -261,7 +254,6 @@ class Model(LightningModule):
         dataset = TensorDataset(
             torch.tensor(df['내용'].to_list(), dtype=torch.long),
             torch.tensor(df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
-            torch.tensor(attention_mask, dtype=torch.long),
         )
         return DataLoader(
             dataset,
@@ -293,7 +285,7 @@ if __name__ == "__main__":
     'max_length': 150,  # Max Length input size
     'train_data_path': "",  # Train Dataset file 
     'val_data_path': "",  # Validation Dataset file 
-    'test_mode': False,  # Test Mode enables `fast_dev_run`
+    'test_mode': True,  # Test Mode enables `fast_dev_run`
     'optimizer': 'AdamW',  # AdamW vs AdamP
     'lr_scheduler': 'exp',  # ExponentialLR vs CosineAnnealingWarmRestarts
     'fp16': True,  # Enable train on FP16(if GPU)
@@ -406,15 +398,7 @@ if __name__ == "__main__":
 
     if TEST == True:
         def infer(x):
-            temp  = model.tokenizer(x, 
-                                    add_special_tokens=True, 
-                                    max_length=300, 
-                                    return_token_type_ids=False, 
-                                    padding="max_length",
-                                    return_attention_mask=True, 
-                                    return_tensors='pt'
-                                    )
-            return model(temp["input_ids"], temp["attention_mask"])
+            return model(**model.tokenizer(x, return_tensors='pt'))
 
         def judge(sentence):
             if sentence == "":

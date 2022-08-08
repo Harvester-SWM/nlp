@@ -50,9 +50,8 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.bert = BertModel.from_pretrained(self.hparams.pretrained_model, return_dict=True)
+        self.newbert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, return_dict=True, num_labels = 11)
         self.drop = torch.nn.Dropout(0.3) #forward에서 적용하셈 이거 있어야 할 듯 
-        self.line = torch.nn.Linear(self.bert.config.hidden_size, self.hparams.n_classes) # (1025, x)에서 x 는 label의 개수다 ㅇㅇ kcbert large라서 1024개 ㅅㅂ..
         self.criterion = torch.nn.BCEWithLogitsLoss()#class 개수 많아지면 다른 loss 함수 써야한다.
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
@@ -60,22 +59,9 @@ class Model(LightningModule):
             else self.hparams.pretrained_model
         )
 
-    def forward(self, input_ids, attention_mask, labels=None, **kwargs):
+    def forward(self, input_ids, labels=None, **kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
-
-        #print(self.tokenizer())
-        output_2 = self.bert(input_ids, attention_mask=attention_mask)
-        #self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        #print(output_1)
-        output_1 = self.line(output_2.pooler_output) # 모델의 결과 값
-        output = torch.sigmoid(output_1)
-        #print(labels)
-        loss = 0
-        if labels is not None:
-            #print("label is not none")
-            loss = self.criterion(output_1, labels)
-        #print(loss)
-        return loss, output
+        return self.newbert(input_ids=input_ids, labels=labels)
 
     def step(self, batch, batch_idx):
         data, labels, attention_mask = batch
@@ -84,8 +70,11 @@ class Model(LightningModule):
         #print(labels[0].shape)
         #print(attention_mask[0].shape)
 
-        loss ,output = self(input_ids=data, attention_mask=attention_mask, labels=labels)
+        output = self(input_ids=data, labels=labels)
         
+        loss = output.loss
+        logits = output.logits
+
         # Transformers 4.0.0+
         #self.log("train_loss", loss, prog_bar=True, logger=True)
 
@@ -93,8 +82,8 @@ class Model(LightningModule):
         #logits = output.logits
         
         #preds = output.argmax(dim=-1)
-        y_true = list(labels.detach().cpu().numpy())
-        y_pred = list(output.detach().cpu().numpy())
+        y_true = labels.detach().cpu().numpy()
+        y_pred = logits.detach().cpu().numpy()
         #print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}, Acc: {acc}, Prec: {prec}, Rec: {rec}, F1: {f1}')
 
         #print("y_true")
@@ -128,12 +117,13 @@ class Model(LightningModule):
         
         y_true = []
         y_pred = []
+        # 이유는 모르겠지만 이렇게 하면 된다.
         for i in outputs:
-            #print(i)
-            y_true += i['y_true']
+            for true in i['y_true']:
+                y_true.append(np.array([ x for x in true]))
 
-            for x in i['y_pred']:
-                 y_pred.append(np.array([1 if y > 0.5 else 0 for y in x]))
+            for pred in i['y_pred']:
+                 y_pred.append(np.array([1 if x > 0.5 else 0 for x in pred]))
                  #print("for loop")
                  #print([1 if y > 0.5 else 0 for y in x])
         #print(multilabel_confusion_matrix(y_true, y_pred)) # confusion matrixx 구해져서 acc prc rec f1 구하면 된다,
@@ -230,6 +220,7 @@ class Model(LightningModule):
                 truncation=True,
                 **kwargs,
         )
+
     def preprocess_dataframe(self, df):
         temp = df['내용'].map(self.convert)
         #temp = temp.to_list()
@@ -284,6 +275,9 @@ class Model(LightningModule):
 
     def val_dataloader(self):
         return self.dataloader(self.hparams.val_data_path, shuffle=False)
+    
+    def predict_dataloader(self):
+        return self.dataloader()
     
 
 if __name__ == "__main__":

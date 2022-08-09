@@ -13,7 +13,7 @@ from pprint import pprint
 
 import torch
 from torch.utils.data import Dataset, DataLoader, TensorDataset
-from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.lr_scheduler import ExponentialLR, CosineAnnealingWarmRestarts
 
 
 

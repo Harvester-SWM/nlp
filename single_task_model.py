@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ExponentialLR, CosineAnnealingWarmRestarts
 
 from pytorch_lightning import LightningModule
 
-from transformers import  AdamW, AutoTokenizer, BertModel
+from transformers import AdamW, AutoModelForSequenceClassification, AutoTokenizer, BertModel
 
 from sklearn.metrics import multilabel_confusion_matrix
 
@@ -25,65 +25,34 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.bert = BertModel.from_pretrained(self.hparams.pretrained_model)
-        self.dropout = torch.nn.Dropout(self.bert.config.hidden_dropout_prob)
-        self.main_classification = torch.nn.Linear(self.bert.config.hidden_size, 11) # classification label
-        self.sub_classification = torch.nn.Linear(self.bert.config.hidden_size, 1)
+        self.model = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, return_dict=True, num_labels=11)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
             if self.hparams.pretrained_tokenizer
             else self.hparams.pretrained_model
         )
 
-    def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
+    def forward(self, input_ids, labels=None, **kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
-
         '''
-        
-        모델에 따라서 output layer 수정하기
-                             /----- label 11개
-        bert ---> dropout ---
-                             \----- label 1개
+        TO DO
+        여긴 단일 모델
         '''
-
-        outputs = self.bert(input_ids)
-        pooled_output = outputs[1]
-
-        pooled_output = self.dropout(pooled_output)
-        
-        #main logtis and loss
-        main_logits = self.main_classification(pooled_output)
-
-        main_loss_fct = torch.nn.BCEWithLogitsLoss()
-        main_loss = main_loss_fct(main_logits, main_labels)
-
-        main_output = (main_logits,) + outputs[2:]
-
-        #sub logtis and loss
-        sub_logits = self.sub_classification(pooled_output)
-        
-        sub_loss_fct = torch.nn.MSELoss()
-        sub_loss = sub_loss_fct(sub_logits, sub_labels)
-
-        sub_output = (sub_logits,) + outputs[2:]
-
-
-        return ((main_loss,) + main_output) ,((sub_loss, ) + sub_output)
+        return self.model(input_ids=input_ids, labels=labels)
 
     def step(self, batch, batch_idx):
-        data, main_labels, sub_labels = batch
-
-        main_output, sub_output = self(input_ids=data, main_labels=main_labels, sub_labels=sub_labels)
-
-        main_loss, main_logits = main_output
-
-        sub_loss, sub_logits = sub_output
-
-        y_true = main_labels.detach().cpu().numpy()
-        y_pred = main_logits.detach().cpu().numpy()
+        data, labels = batch
+    
+        output = self(input_ids=data, labels=labels)
         
+        loss = output.loss
+        logits = output.logits
+
+        y_true = labels.detach().cpu().numpy()
+        y_pred = logits.detach().cpu().numpy()
+
         return {
-            'loss':  main_loss + sub_loss,
+            'loss':  loss,
             'y_true': y_true,
             'y_pred': y_pred,
         }
@@ -130,7 +99,6 @@ class Model(LightningModule):
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}')
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}', file=result)
         self.log(state+'_loss', float(loss), on_epoch=True, prog_bar=True)
-        
         
         #file close
         result.close()
@@ -203,42 +171,18 @@ class Model(LightningModule):
         
         return df
 
-    def subDataframe(self, main_df):
-        write_list = []
-        LABEL_COLUMNS = main_df.columns.tolist()[1:]
-        
-        for index, row in main_df.iterrows():
-            result = 0
-            for i in LABEL_COLUMNS:
-                if row[i] > 0:
-                    result = 1
-                    break
-            
-            temp = [result]
-            write_list.append(temp)
-
-        return pd.DataFrame(write_list, columns=['악플'])
-
     def dataloader(self, path, shuffle=False):
-        main_df = self.read_data(path)
-        main_df = self.preprocess_dataframe(main_df)
-        LABEL_COLUMNS = main_df.columns.tolist()[1:]
-
-        sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
+        df = self.read_data(path)
+        df = self.preprocess_dataframe(df)
+        LABEL_COLUMNS = df.columns.tolist()[1:]
         
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
-            main_df[i] = main_df[i].map(lambda x : 0 if x == 0 else 1)
-
-
-        ## 2차 데이터를 만든다.
-
-
+            df[i] = df[i].map(lambda x : 0 if x == 0 else 1)
 
         dataset = TensorDataset(
-            torch.tensor(main_df['내용'].to_list(), dtype=torch.long),
-            torch.tensor(main_df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
-            torch.tensor(sub_df.values.tolist(), dtype=torch.float),
+            torch.tensor(df['내용'].to_list(), dtype=torch.long),
+            torch.tensor(df[LABEL_COLUMNS].values.tolist(), dtype=torch.float),
         )
         return DataLoader(
             dataset,

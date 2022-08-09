@@ -33,8 +33,6 @@ from soynlp.normalizer import repeat_normalize
 
 """## 기본 학습 Arguments"""
 
-
-
 tpu_cores: int = 0  # Enable TPU with 1 core or 8 cores
 #def loss_fn(outputs, targets):
 #    return torch.nn.BCEWithLogitsLoss()(outputs, targets)
@@ -142,7 +140,7 @@ class Model(LightningModule):
         #print(y_pred)
 
         return {
-            'loss':  main_loss + sub_loss if self.hparams.model_task == 'multi' else main_loss,
+            'loss':  main_loss + sub_loss,
             'y_true': y_true,
             'y_pred': y_pred,
         }
@@ -355,7 +353,6 @@ if __name__ == "__main__":
     'cpu_workers': os.cpu_count(),
     'n_classes' : 11,
     'test_name' : '',
-    'model_task' : 'multi'
     }
     
 
@@ -370,7 +367,7 @@ if __name__ == "__main__":
     '''
     parser = argparse.ArgumentParser(description="usage")
 
-
+    parser.add_argument('--pretrained_model', type=str, default='beomi/kcbert-large', help='type of model')
     parser.add_argument('--batch_size', type=int, default=4, help='size of batch')
     parser.add_argument('--lr', type=float, default=5e-6, help='number of learning rate')
     parser.add_argument('--epochs', type=int, default=5, help='number of epochs')
@@ -381,7 +378,6 @@ if __name__ == "__main__":
     parser.add_argument('--optimizer', type=str, default='AdamW', help='type of optimizer')
     parser.add_argument('--lr_scheduler', type=str, default='exp', help='type of learning scheduler')
     parser.add_argument('--test_name', type=str, default='no_name', help='실험 이름 / directory 로 사용한다')
-    parser.add_argument('--model_task', type=str, default='single', help='multitask model을 사용할지 아니면 single task model을 사용할지 결정한다')
 
 
     user_input = parser.parse_args()

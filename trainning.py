@@ -53,8 +53,10 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.main_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 11, problem_type='multi_label_classification')
-        self.sub_bert = AutoModelForSequenceClassification.from_pretrained(self.hparams.pretrained_model, num_labels = 1)
+        self.bert = BertModel.from_pretrained(self.hparams.pretrained_model)
+        self.dropout = torch.nn.Dropout(self.bert.config.hidden_dropout_prob)
+        self.main_classification = torch.nn.Linear(self.bert.config.hidden_size, 11) # classification label
+        self.sub_classification = torch.nn.Linear(self.bert.config.hidden_size, 1)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
             if self.hparams.pretrained_tokenizer
@@ -63,6 +65,43 @@ class Model(LightningModule):
 
     def forward(self, input_ids, main_labels=None, sub_labels=None,**kwargs):
         #forward에 인자 넘기고 싶으면 / self 있는 곳 들에서 인자 넘겨주면 된다.
+
+        '''
+        TO DO
+        
+        모델에 따라서 output layer 수정하기
+                             /----- label 11개
+        bert ---> dropout ---
+                             \----- label 1개
+        '''
+
+        outputs = self.bert(input_ids)
+
+        pooled_output = outputs[1]
+
+        pooled_output = self.dropout(pooled_output)
+        
+        #main
+        main_logits = self.main_classification(pooled_output)
+
+        main_loss_fct = torch.nn.BCEWithLogitsLoss()
+        main_loss = main_loss_fct(main_logits, main_labels)
+        
+        main_output = (main_logits,) + outputs[2:]
+        #main
+
+        #sub
+        #if sub_labels is not None:
+        sub_logits = self.sub_classification(pooled_output)
+        
+        sub_loss_fct = torch.nn.MSELoss()
+        sub_loss = sub_loss_fct(sub_logits, sub_labels)
+
+        sub_output = (sub_logits,) + outputs[2:]
+        #sub
+
+        return ((main_loss,) + main_output) ,((sub_loss, ) + sub_output)
+
         return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):
@@ -76,17 +115,23 @@ class Model(LightningModule):
 
         main_output, sub_output = self(input_ids=data, main_labels=main_labels, sub_labels=sub_labels)
         
-        main_loss = main_output.loss
-        main_logits = main_output.logits
+        #print(main_output)
 
-        sub_loss = sub_output.loss
+
+        main_loss, main_logits = main_output
+        #main_logits = main_output.main_logits
+        
+        #print(main_loss)
+        #print(main_logits)
+
+        sub_loss, sub_logits = sub_output
 
         # Transformers 4.0.0+
         #self.log("train_loss", loss, prog_bar=True, logger=True)
 
         #loss = output.loss
         #logits = output.logits
-        
+
         #preds = output.argmax(dim=-1)
         y_true = main_labels.detach().cpu().numpy()
         y_pred = main_logits.detach().cpu().numpy()

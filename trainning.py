@@ -77,7 +77,6 @@ class Model(LightningModule):
         '''
 
         outputs = self.bert(input_ids)
-
         pooled_output = outputs[1]
 
         pooled_output = self.dropout(pooled_output)
@@ -218,7 +217,8 @@ class Model(LightningModule):
             optimizer = AdamP(self.parameters(), lr=self.hparams.lr)
         elif self.hparams.optimizer == 'SWA':
             from torchcontrib.optim import SWA
-            optimizer = AdamP(self.parameters(), lr=self.hparams.lr)
+            optimizer = AdamW(self.parameters(), lr=self.hparams.lr)
+            #optimizer = SWA(swa_lr=self.hparams.lr)
         else:
             raise NotImplementedError('Only AdamW , AdamP and SWA is Supported!')
         if self.hparams.lr_scheduler == 'cos':
@@ -449,9 +449,12 @@ if __name__ == "__main__":
         else: raise
 
     result = open(f"./checkpoint/{args['test_name']}/{args['result_file']}", 'w')
-
-    print(f"args.batch_size : {args['batch_size']} | lr : {args['lr']} | epoches : {args['epochs']} | optimizer : {args['optimizer']}", file=result)
-
+    
+    for arg in vars(user_input):
+        temp = getattr(user_input, arg)
+        print(f"{arg} : {temp}", end = ' | ', file=result)
+    print(file=result)
+    
     print("Using PyTorch Ver", torch.__version__)
     print("Fix Seed:", args['random_seed'])
     seed_everything(args['random_seed'])

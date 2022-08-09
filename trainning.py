@@ -1,5 +1,6 @@
 from gc import callbacks
 import os
+from pickle import NONE
 import sys
 import argparse
 import errno
@@ -101,8 +102,6 @@ class Model(LightningModule):
         #sub
 
         return ((main_loss,) + main_output) ,((sub_loss, ) + sub_output)
-
-        return self.main_bert(input_ids=input_ids, labels=main_labels), self.sub_bert(input_ids=input_ids, labels=sub_labels)
 
     def step(self, batch, batch_idx):
         data, main_labels, sub_labels = batch
@@ -239,7 +238,7 @@ class Model(LightningModule):
         elif path.endswith('csv'):
             return pd.read_csv(path)
         elif path.endswith('tsv') or path.endswith('txt'):
-            return pd.read_csv(path, sep='\t')[:100]
+            return pd.read_csv(path, sep='\t')
         else:
             raise NotImplementedError('Only Excel(xlsx)/Csv/Tsv(txt) are Supported')
 
@@ -356,7 +355,7 @@ if __name__ == "__main__":
     'cpu_workers': os.cpu_count(),
     'n_classes' : 11,
     'test_name' : '',
-    'model_task' : 'single'
+    'model_task' : 'multi'
     }
     
 

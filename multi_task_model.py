@@ -18,6 +18,8 @@ from soynlp.normalizer import repeat_normalize
 
 """# Model 만들기 with Pytorch Lightning"""
 
+TRESHOLD = 0.5
+
 class Model(LightningModule):
     def __init__(self, **kwargs):
         super().__init__()
@@ -103,12 +105,14 @@ class Model(LightningModule):
         
         y_true = []
         y_pred = []
+        
+        # 예상값과 
         for i in outputs:
             for true in i['y_true']:
                 y_true.append(np.array([ x for x in true]))
 
             for pred in i['y_pred']:
-                y_pred.append(np.array([1 if x > 0.5 else 0 for x in pred]))
+                y_pred.append(np.array([1 if x > TRESHOLD else 0 for x in pred]))
 
         confusion_mat = multilabel_confusion_matrix(y_true, y_pred)
 
@@ -119,12 +123,6 @@ class Model(LightningModule):
             f1 = 2 * rec * prec / (rec + prec) if (rec + prec) > 0 else 0
             print(f'class {idx  : .5f} |  acc : {acc : .5f} | prec : {prec : .5f} | rec : {rec : .5f} | f1 : {f1 : .5f}', file=self.hparams.result_file)
 
-        #print(y_true)
-        #print(y_pred)
-        #acc = accuracy_score(y_true, y_pred)
-        #prec = precision_score(y_true, y_pred)
-        #rec = recall_score(y_true, y_pred)
-        #f1 = f1_score(y_true, y_pred)
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}', file=self.hparams.result_file)
 
         self.log(state+'_loss', float(loss), on_epoch=True, prog_bar=True)

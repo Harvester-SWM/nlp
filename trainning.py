@@ -31,8 +31,9 @@ args = {
 'tpu_cores': 0,  # Enable TPU with 1 core or 8 cores
 'cpu_workers': os.cpu_count(),
 'n_classes' : 11,
+'sensitive' : 0,
 'test_name' : '',
-'result_file': ''
+'result_file': '',
 }
 
 
@@ -54,11 +55,13 @@ parser.add_argument('--lr', type=float, default=5e-6, help='number of learning r
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--train_data_path', type=str, default='./data/train.tsv', help='train file path')
 parser.add_argument('--val_data_path', type=str, default='./data/valid.tsv', help='validation file path')
-parser.add_argument('--result_file', type=str, default='result.txt', help='path and name of result file')
 parser.add_argument('--test_mode', type=bool, default=False, help='whether to turn on test')
 parser.add_argument('--optimizer', type=str, default='AdamW', help='type of optimizer')
 parser.add_argument('--lr_scheduler', type=str, default='exp', help='type of learning scheduler')
+parser.add_argument('--sensitive', type=int, default=0, help='how sensitive 0이면 sensitive 하기 1 이면 둔감')
 parser.add_argument('--test_name', type=str, default='no_name', help='실험 이름 / directory 로 사용한다')
+parser.add_argument('--result_file', type=str, default='result.txt', help='path and name of result file')
+
 
 
 user_input = parser.parse_args()

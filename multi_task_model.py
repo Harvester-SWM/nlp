@@ -210,7 +210,7 @@ class Model(LightningModule):
         for index, row in main_df.iterrows():
             result = 0
             for i in LABEL_COLUMNS:
-                if row[i] > 0:
+                if row[i] > self.hparams.sensitive:
                     result = 1
                     break
             
@@ -228,7 +228,7 @@ class Model(LightningModule):
         
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
-            main_df[i] = main_df[i].map(lambda x : 0 if x == 0 else 1)
+            main_df[i] = main_df[i].map(lambda x : 1 if x > self.hparams.sensitive else 0)
 
 
         ## 2차 데이터를 만든다.

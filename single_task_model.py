@@ -178,7 +178,7 @@ class Model(LightningModule):
         
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
-            df[i] = df[i].map(lambda x : 0 if x == 0 else 1)
+            df[i] = df[i].map(lambda x : 1 if x > self.hparams.sensitive else 0)
 
         dataset = TensorDataset(
             torch.tensor(df['내용'].to_list(), dtype=torch.long),

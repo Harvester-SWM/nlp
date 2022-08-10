@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ExponentialLR, CosineAnnealingWarmRestarts
 
 from pytorch_lightning import LightningModule
 
-from transformers import  AdamW, AutoTokenizer, BertModel
+from transformers import  AdamW, AutoTokenizer, AutoModel
 
 from sklearn.metrics import multilabel_confusion_matrix
 
@@ -25,10 +25,10 @@ class Model(LightningModule):
         super().__init__()
         self.save_hyperparameters() # 이 부분에서 self.hparams에 위 kwargs가 저장된다.
         
-        self.bert = BertModel.from_pretrained(self.hparams.pretrained_model)
-        self.dropout = torch.nn.Dropout(self.bert.config.hidden_dropout_prob)
-        self.main_classification = torch.nn.Linear(self.bert.config.hidden_size, 11) # classification label
-        self.sub_classification = torch.nn.Linear(self.bert.config.hidden_size, 1)
+        self.model = AutoModel.from_pretrained(self.hparams.pretrained_model)
+        self.dropout = torch.nn.Dropout(self.model.config.hidden_dropout_prob)
+        self.main_classification = torch.nn.Linear(self.model.config.hidden_size, 11) # classification label
+        self.sub_classification = torch.nn.Linear(self.model.config.hidden_size, 1)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.hparams.pretrained_tokenizer
             if self.hparams.pretrained_tokenizer
@@ -46,7 +46,7 @@ class Model(LightningModule):
                              \----- label 1개
         '''
 
-        outputs = self.bert(input_ids)
+        outputs = self.model(input_ids)
         pooled_output = outputs[1]
 
         pooled_output = self.dropout(pooled_output)
@@ -172,7 +172,7 @@ class Model(LightningModule):
         elif path.endswith('csv'):
             return pd.read_csv(path)
         elif path.endswith('tsv') or path.endswith('txt'):
-            return pd.read_csv(path, sep='\t')
+            return pd.read_csv(path, sep='\t')[:100]
         else:
             raise NotImplementedError('Only Excel(xlsx)/Csv/Tsv(txt) are Supported')
 

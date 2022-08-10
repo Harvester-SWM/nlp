@@ -19,6 +19,11 @@ parser.add_argument('--test_name', type=str, default='no_name', help='실험 이
 변수 이름 지정
 END 
 # 이번에 조절할꺼 model_task lr pretrarined_model sensitive test_name
+# 모델은 kcbert / kcelectra / kobert
+# lr 
+# epoch 
+
+
 python3 trainning.py --model_task $ --pretrained_model $ --batch_size $ --lr $ --epochs $ --train_data_path $ --val_data_path $ --test_mode $ --optimizer --lr_scheduler --sensitive $ --test_name $
 
 python3 trainning.py train_500000.tsv    valid_500000.tsv   result.txt

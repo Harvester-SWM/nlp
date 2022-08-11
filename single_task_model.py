@@ -140,7 +140,7 @@ class Model(LightningModule):
         elif path.endswith('csv'):
             return pd.read_csv(path)
         elif path.endswith('tsv') or path.endswith('txt'):
-            return pd.read_csv(path, sep='\t')[:100]
+            return pd.read_csv(path, sep='\t')
         else:
             raise NotImplementedError('Only Excel(xlsx)/Csv/Tsv(txt) are Supported')
 

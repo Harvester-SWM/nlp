@@ -25,16 +25,18 @@ END
 # sensitive
 # model_task
 
+#python3 trainning.py --model_task multi_task_model --pretrained_model beomi/KcELECTRA-base --lr 0.000005 --sensitive 1 --test_name multi_kcelec_0.000005_1
+
+
 model_task_list=("single_task_model" "multi_task_model")
 model_task_str=("single" "multi")
-pretrained_model_list=("beomi/KcELECTRA-base" "beomi/kcbert-base")
-pretrained_model_str=("kcelec" "kcbert-b")
-lr_list=(0.000005)
-#pretrained_model_list=("beomi/KcELECTRA-base" "beomi/kcbert-base" "beomi/kcbert-large" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
-#pretrained_model_str=("kcelec" "kcbert-b" "kcbert-l" "koelec-b" "koele-s")
-#lr_list=(0.000005 0.000001 0.0000005)
+
+pretrained_model_list=("beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator" "beomi/kcbert-base" "beomi/kcbert-large" "HanBert-54kN-torch")
+pretrained_model_str=("kcelec" "koelec-b" "koele-s" "kcbert-b" "kcbert-l" "Hanbert" )
+lr_list=(0.000005 0.000001 0.0000005)
 sensitive_list=(0 1)
 
+# electra에서는 multi-task model 작동하지 않음
 # 이번에 들어가는 인수 {model_task} {lr} {pretrarined_model} {sensitive} {test_name} 총 5개
 
 for (( i = 0 ; i < ${#model_task_list[@]} ; i++ ))  ; do
@@ -60,7 +62,6 @@ python3 trainning.py\
         done
     done
 done
-
 
 #python3 trainning.py --model_task $ --pretrained_model $ --batch_size $ --lr $ --epochs $ --train_data_path $ --val_data_path $ --test_mode $ --optimizer --lr_scheduler --sensitive $ --test_name $
 

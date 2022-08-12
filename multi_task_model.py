@@ -203,9 +203,8 @@ class Model(LightningModule):
         
         return df
 
-    def subDataframe(self, main_df):
+    def subDataframe(self, main_df, LABEL_COLUMNS):
         write_list = []
-        LABEL_COLUMNS = main_df.columns.tolist()[1:]
         
         for index, row in main_df.iterrows():
             result = 0
@@ -224,7 +223,7 @@ class Model(LightningModule):
         main_df = self.preprocess_dataframe(main_df)
         LABEL_COLUMNS = main_df.columns.tolist()[1:]
 
-        sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
+        sub_df=self.subDataframe(main_df, LABEL_COLUMNS) #레이블 결과만 저장했다.
         # 227번째 줄의 코드를 232번째 줄의 반복문 아래로 옮기게 되면 결과가 바뀔 수 있다
         # 위치 이동시 참고 할 것
 

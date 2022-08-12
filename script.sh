@@ -45,21 +45,23 @@ for (( i = 0 ; i < ${#model_task_list[@]} ; i++ ))  ; do
     for (( j = 0 ; j < ${#pretrained_model_list[@]} ; j++ ))  ; do
         for lr in "${lr_list[@]}" ; do
             for sensitive in "${sensitive_list[@]}" ; do
+START=$(date +%s)
 echo "
-python3 trainnig.py\
+python3 trainnig.py \
 --model_task ${model_task_list[$i]} \
 --pretrained_model ${pretrained_model_list[$j]} \
 --lr ${lr} \
 --sensitive ${sensitive} \
 --test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
 " 
-
-#python3 trainning.py \
-#--model_task ${model_task_list[$i]} \
-#--pretrained_model ${pretrained_model_list[$j]} \
-#--lr ${lr} \
-#--sensitive ${sensitive} \
-#--test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
+python3 trainning.py \
+--model_task ${model_task_list[$i]} \
+--pretrained_model ${pretrained_model_list[$j]} \
+--lr ${lr} \
+--sensitive ${sensitive} \
+--test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
+END=$(date +%s)
+DIFF=$(( $END - $START ))
 
 python3 message.py \
 --command \
@@ -69,9 +71,10 @@ python3 message.py \
 --lr ${lr} \
 --sensitive ${sensitive}" \
 --now_number ${NOW_TEST_NUMBER} \
---total_number ${TOTAL_TEST_NUMBER}
+--total_number ${TOTAL_TEST_NUMBER} \
+--time_elapsed ${DIFF}
 
-NOW_TEST_NUMBER=$(($NOW_TEST_NUMBER + 1)) 
+NOW_TEST_NUMBER=$(($NOW_TEST_NUMBER + 1))
             done
         done
     done

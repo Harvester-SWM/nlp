@@ -52,7 +52,7 @@ parser.add_argument('--model_task', type=str, default='multi_task_model', help='
 parser.add_argument('--pretrained_model', type=str, default='beomi/kcbert-large', help='type of model')
 parser.add_argument('--batch_size', type=int, default=4, help='size of batch')
 parser.add_argument('--lr', type=float, default=5e-6, help='number of learning rate')
-parser.add_argument('--epochs', type=int, default=1, help='number of epochs')
+parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--train_data_path', type=str, default='./data/train.tsv', help='train file path')
 parser.add_argument('--val_data_path', type=str, default='./data/valid.tsv', help='validation file path')
 parser.add_argument('--test_mode', type=bool, default=False, help='whether to turn on test')

@@ -225,7 +225,9 @@ class Model(LightningModule):
         LABEL_COLUMNS = main_df.columns.tolist()[1:]
 
         sub_df=self.subDataframe(main_df) #레이블 결과만 저장했다.
-        
+        # 227번째 줄의 코드를 232번째 줄의 반복문 아래로 옮기게 되면 결과가 바뀔 수 있다
+        # 위치 이동시 참고 할 것
+
         #일단 df에서 다 0 아니면 1로 만들어준다
         for i in LABEL_COLUMNS:
             main_df[i] = main_df[i].map(lambda x : 1 if x > self.hparams.sensitive else 0)

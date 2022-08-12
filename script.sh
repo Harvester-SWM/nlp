@@ -27,14 +27,16 @@ END
 
 #python3 trainning.py --model_task multi_task_model --pretrained_model beomi/KcELECTRA-base --lr 0.000005 --sensitive 1 --test_name multi_kcelec_0.000005_1
 
-
 model_task_list=("single_task_model" "multi_task_model")
 model_task_str=("single" "multi")
 
-pretrained_model_list=("beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator" "beomi/kcbert-base" "beomi/kcbert-large" "HanBert-54kN-torch")
-pretrained_model_str=("kcelec" "koelec-b" "koele-s" "kcbert-b" "kcbert-l" "Hanbert" )
+pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "HanBert-54kN-torch" "beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
+pretrained_model_str=("kcbert-l" "kcbert-b" "Hanbert" "kcelec" "koelec-b" "koelec-s")
 lr_list=(0.000005 0.000001 0.0000005)
 sensitive_list=(0 1)
+
+NOW_TEST_NUMBER=1
+TOTAL_TEST_NUMBER=`expr ${#model_task_list[@]} \* ${#pretrained_model_list[@]} \* ${#lr_list[@]} \*  ${#sensitive_list[@]}`
 
 # electra에서는 multi-task model 작동하지 않음
 # 이번에 들어가는 인수 {model_task} {lr} {pretrarined_model} {sensitive} {test_name} 총 5개
@@ -44,20 +46,32 @@ for (( i = 0 ; i < ${#model_task_list[@]} ; i++ ))  ; do
         for lr in "${lr_list[@]}" ; do
             for sensitive in "${sensitive_list[@]}" ; do
 echo "
-python3 trainning.py\
+python3 trainnig.py\
 --model_task ${model_task_list[$i]} \
 --pretrained_model ${pretrained_model_list[$j]} \
 --lr ${lr} \
 --sensitive ${sensitive} \
 --test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
-"
-                
-                python3 trainning.py\
-                --model_task ${model_task_list[$i]} \
-                --pretrained_model ${pretrained_model_list[$j]} \
-                --lr ${lr} \
-                --sensitive ${sensitive} \
-                --test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
+" 
+
+#python3 trainning.py \
+#--model_task ${model_task_list[$i]} \
+#--pretrained_model ${pretrained_model_list[$j]} \
+#--lr ${lr} \
+#--sensitive ${sensitive} \
+#--test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
+
+python3 message.py \
+--command \
+"python3 trainning.py\
+--model_task ${model_task_list[$i]} \
+--pretrained_model ${pretrained_model_list[$j]} \
+--lr ${lr} \
+--sensitive ${sensitive}" \
+--now_number ${NOW_TEST_NUMBER} \
+--total_number ${TOTAL_TEST_NUMBER}
+
+NOW_TEST_NUMBER=$(($NOW_TEST_NUMBER + 1)) 
             done
         done
     done

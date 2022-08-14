@@ -88,16 +88,21 @@ class Model(LightningModule):
         #file open
         result = open(f"./checkpoint/{self.hparams.test_name}/{self.hparams.result_file}", 'a')
 
+        total_acc = 0; total_prec = 0; total_rec = 0; total_f1 = 0
+
         for idx ,x in enumerate(confusion_mat):
             acc =  (x[0][0] + x[1][1]) / (x[0][0] + x[0][1] + x[1][0] + x[1][1]) if (x[0][0] + x[0][1] + x[1][0] + x[1][1]) > 0 else 0
             prec =  x[1][1] / (x[0][1] + x[1][1])  if (x[0][1] + x[1][1]) > 0 else 0
             rec = x[1][1] / (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) > 0 else 0
             f1 = 2 * rec * prec / (rec + prec) if (rec + prec) > 0 else 0
+            total_acc+=acc; total_prec+=prec; total_rec+=rec; total_f1+=f1
             print(f'class {idx : .5f} |  acc : {acc : .5f} | prec : {prec : .5f} | rec : {rec : .5f} | f1 : {f1 : .5f}')
-            print(f'class {idx : .5f} |  acc : {acc : .5f} | prec : {prec : .5f} | rec : {rec : .5f} | f1 : {f1 : .5f}', file=result)
+            
+        total_acc /= 11; total_prec /= 11; total_rec /= 11; total_f1 /= 11
 
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}')
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}', file=result)
+        print(f'acc : {total_acc : .5f} | prec : {total_prec : .5f} | rec : {total_rec : .5f} | f1 : {total_f1 : .5f}', file=result)
         self.log(state+'_loss', float(loss), on_epoch=True, prog_bar=True)
         
         #file close

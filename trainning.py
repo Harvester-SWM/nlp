@@ -20,7 +20,7 @@ args = {
 'pretrained_tokenizer': '',  # Optional, Transformers Tokenizer Name. Overrides `pretrained_model`
 'batch_size': 4,
 'lr': 5e-6,  # Starting Learning Rate
-'epochs': 5,  # Max Epochs
+'epochs': 10,  # Max Epochs
 'max_length': 150,  # Max Length input size
 'train_data_path': "",  # Train Dataset file 
 'val_data_path': "",  # Validation Dataset file 

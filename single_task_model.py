@@ -103,7 +103,12 @@ class Model(LightningModule):
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}')
         print(f'[Epoch {self.trainer.current_epoch} {state.upper()}] Loss: {loss}', file=result)
         print(f'acc : {total_acc : .5f} | prec : {total_prec : .5f} | rec : {total_rec : .5f} | f1 : {total_f1 : .5f}', file=result)
+        
         self.log(state+'_loss', float(loss), on_epoch=True, prog_bar=True)
+        self.log(state+'_acc', float(loss), on_epoch=True, prog_bar=True)
+        self.log(state+'_prec', float(loss), on_epoch=True, prog_bar=True)
+        self.log(state+'_rec', float(loss), on_epoch=True, prog_bar=True)
+        self.log(state+'_f1', float(loss), on_epoch=True, prog_bar=True)
         
         #file close
         result.close()

@@ -18,7 +18,7 @@ args = {
 'random_seed': 42, # Random Seed
 'pretrained_model': 'beomi/kcbert-large',  # Transformers PLM name
 'pretrained_tokenizer': '',  # Optional, Transformers Tokenizer Name. Overrides `pretrained_model`
-'batch_size': 4,
+'batch_size': 32,
 'lr': 5e-6,  # Starting Learning Rate
 'epochs': 10,  # Max Epochs
 'max_length': 150,  # Max Length input size
@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser(description="usage")
 
 parser.add_argument('--model_task', type=str, default='multi_task_model', help='single_task_model 선택 혹은 multi_task_model') # 이건 필수
 parser.add_argument('--pretrained_model', type=str, default='beomi/kcbert-large', help='type of model')
-parser.add_argument('--batch_size', type=int, default=4, help='size of batch')
+parser.add_argument('--batch_size', type=int, default=64, help='size of batch')
 parser.add_argument('--lr', type=float, default=5e-6, help='number of learning rate')
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
 parser.add_argument('--train_data_path', type=str, default='./data/train.tsv', help='train file path')
@@ -134,7 +134,6 @@ trainer = Trainer(
     deterministic=torch.cuda.is_available(),
     gpus=-1 if torch.cuda.is_available() else None,
     precision=16 if args['fp16'] else 32,
-    progress_bar_refresh_rate=30,
     callbacks = [early_stop_callback, checkpoint_callback]
     #callback?
     # For TPU Setup

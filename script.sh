@@ -46,6 +46,18 @@ for (( i = 0 ; i < ${#model_task_list[@]} ; i++ ))  ; do
         for lr in "${lr_list[@]}" ; do
             for sensitive in "${sensitive_list[@]}" ; do
 START=$(date +%s)
+
+
+python3 message.py \
+--command \
+"python3 trainning.py\
+--model_task ${model_task_list[$i]} \
+--pretrained_model ${pretrained_model_list[$j]} \
+--lr ${lr} \
+--sensitive ${sensitive}" \
+--now_number ${NOW_TEST_NUMBER} \
+--total_number ${TOTAL_TEST_NUMBER} \
+
 echo "
 python3 trainnig.py \
 --model_task ${model_task_list[$i]} \
@@ -79,6 +91,9 @@ NOW_TEST_NUMBER=$(($NOW_TEST_NUMBER + 1))
         done
     done
 done
+
+python3 message.py --command "done!"
+
 
 #python3 trainning.py --model_task $ --pretrained_model $ --batch_size $ --lr $ --epochs $ --train_data_path $ --val_data_path $ --test_mode $ --optimizer --lr_scheduler --sensitive $ --test_name $
 

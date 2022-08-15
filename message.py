@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description="usage")
 parser.add_argument('--command', type=str, default='beomi/kcbert-large', help='type of model')
 parser.add_argument('--now_number', type=int, default='1', help='now test number')
 parser.add_argument('--total_number', type=int, default='1', help='total test number')
-parser.add_argument('--time_elapsed', type=int, default='1', help='total test number')
+parser.add_argument('--time_elapsed', type=int, default='-1', help='total test number')
 
 
 user_input = parser.parse_args()

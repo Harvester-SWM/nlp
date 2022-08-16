@@ -87,6 +87,7 @@ try:
     os.makedirs(f"./checkpoint/{args['test_name']}")
 except OSError as exc: # Python >2.5
     if exc.errno == errno.EEXIST and os.path.isdir(f"./checkpoint/{args['test_name']}"):
+        exit()# 경로 존재하면 프로그램 종료
         pass
     else: raise
 #파일 오픈

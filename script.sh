@@ -32,7 +32,7 @@ model_task_str=("single" "multi")
 
 pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "HanBert-54kN-torch" "beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
 pretrained_model_str=("kcbert-l" "kcbert-b" "Hanbert" "kcelec" "koelec-b" "koelec-s")
-lr_list=(0.000005 0.000001 0.0000005)
+lr_list=(0.000005 0.000001)
 sensitive_list=(0 1)
 
 NOW_TEST_NUMBER=1

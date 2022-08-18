@@ -55,7 +55,10 @@ class Model(LightningModule):
         main_logits = self.main_classification(pooled_output)
 
         main_loss_fct = torch.nn.BCEWithLogitsLoss()
-        main_loss = main_loss_fct(main_logits, main_labels)
+        if main_labels is not None:
+            main_loss = main_loss_fct(main_logits, main_labels)
+        else:
+            main_loss = 0
 
         main_output = (main_logits,) + outputs[2:]
 
@@ -63,7 +66,10 @@ class Model(LightningModule):
         sub_logits = self.sub_classification(pooled_output)
         
         sub_loss_fct = torch.nn.BCEWithLogitsLoss()
-        sub_loss = sub_loss_fct(sub_logits, sub_labels)
+        if sub_labels is not None:
+            sub_loss = sub_loss_fct(sub_logits, sub_labels)
+        else:
+            sub_loss = 0
 
         sub_output = (sub_logits,) + outputs[2:]
 

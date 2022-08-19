@@ -1,3 +1,4 @@
+from pickle import FALSE
 import torch
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 import multi_task_model
@@ -14,11 +15,12 @@ from glob import glob
 #   print(infer(sentence))
 
 
-MODEL_PATH = "./checkpoint/multi_kcbert-l_0.000005_1/epoch=1-val_loss=0.23.ckpt"
+MODEL_PATH = "./checkpoint/multi/epoch=1-val_loss=0.23.ckpt"
 #HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
 
 latest_ckpt = sorted(glob(MODEL_PATH))[0]
 #model = trainning.Model.load_from_checkpoint(latest_ckpt, hparams_file=HPARAMS_PATH)
+
 model = multi_task_model.Model.load_from_checkpoint(latest_ckpt)
 
 model.eval()
@@ -36,12 +38,12 @@ def judge(sentence):
     else:
         LABEL_COLUMNS=["욕설","모욕","폭력위협/범죄조장","외설","성혐오","연령","인종/출신지","장애","종교","정치성향","직업혐오"]
         test_prediction, _ = infer(sentence)
-        print(test_prediction)
+        #print(test_prediction)
         output = torch.sigmoid(test_prediction[1])
         output = output.detach().flatten().numpy()
         for i in zip(LABEL_COLUMNS, output):
-            #if i[1] > 0.5:
-            print(i)
+            if i[1] > 0.5:
+                print(f"{i[0]}에 해당합니다")
             #print(f'probability : {prediction}')
     
 if __name__ == "__main__":

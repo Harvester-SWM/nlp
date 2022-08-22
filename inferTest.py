@@ -70,12 +70,12 @@ args = {
     'random_seed': 42, # Random Seed
     'pretrained_model': 'beomi/kcbert-large',  # Transformers PLM name
     'pretrained_tokenizer': '',  # Optional, Transformers Tokenizer Name. Overrides `pretrained_model`
-    'batch_size': 4,
+    'batch_size': 64,
     'lr': 5e-6,  # Starting Learning Rate
-    'epochs': 1,  # Max Epochs
+    'epochs': 10,  # Max Epochs
     'max_length': 150,  # Max Length input size
-    'train_data_path': "nsmc/ratings_train.txt",  # Train Dataset file 
-    'val_data_path': "nsmc/ratings_test.txt",  # Validation Dataset file 
+    'train_data_path': "data/train_500000.tsv",  # Train Dataset file 
+    'val_data_path': "data/valid_500000.tsv",  # Validation Dataset file 
     'test_mode': False,  # Test Mode enables `fast_dev_run`
     'optimizer': 'AdamW',  # AdamW vs AdamP
     'lr_scheduler': 'exp',  # ExponentialLR vs CosineAnnealingWarmRestarts
@@ -209,6 +209,21 @@ class Model(LightningModule):
     def preprocess_dataframe(self, df):
         df['document'] = df['document'].map(self.encode)
         return df
+    
+    def subDataframe(self, main_df, LABEL_COLUMNS):
+        write_list = []
+        
+        for index, row in main_df.iterrows():
+            result = 0
+            for i in LABEL_COLUMNS:
+                if row[i] > self.hparams.sensitive:
+                    result = 1
+                    break
+            
+            temp = [result]
+            write_list.append(temp)
+
+        return pd.DataFrame(write_list, columns=['악플'])
 
     def dataloader(self, path, shuffle=False):
         df = self.read_data(path)
@@ -231,53 +246,65 @@ class Model(LightningModule):
     def val_dataloader(self):
         return self.dataloader(self.hparams.val_data_path, shuffle=False)
 
-# from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 
-# checkpoint_callback = ModelCheckpoint(
-#     filename='epoch{epoch}-val_acc{val_acc:.4f}',
-#     monitor='val_acc',
-#     save_top_k=3,
-#     mode='max',
-#     auto_insert_metric_name=False,
-# )
+checkpoint_callback = ModelCheckpoint(
+    filename='epoch{epoch}-val_acc{val_acc:.4f}',
+    monitor='val_acc',
+    save_top_k=3,
+    mode='max',
+    auto_insert_metric_name=False,
+)
 
-# """# 학습!
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
-# > 💡**NOTE**💡 1epoch별로 GPU P100기준 약50분, GPU V100기준 ~15분이 걸립니다. <br>
-# > 학습시 약 0.92 이하의 validation acc를 얻을 수 있습니다.
+early_stop_callback = EarlyStopping(
+        monitor="val_loss",
+        min_delta=0.00,
+        patience=3,
+        verbose=True,
+        mode="min",
+        check_on_train_epoch_end=True
+    )
 
-# > Update @ 2020.09.01
-# > 최근 Colab Pro에서 V100이 배정됩니다.
+"""# 학습!
 
-# ```python
-# # 1epoch
-# loss=0.207, v_num=0, val_loss=0.221, val_acc=0.913, val_precision=0.914, val_recall=0.913, val_f1=0.914
-# # 2epoch
-# loss=0.152, v_num=0, val_loss=0.213, val_acc=0.918, val_precision=0.912, val_recall=0.926, val_f1=0.919
-# # 3epoch
-# loss=0.135, v_num=0, val_loss=0.225, val_acc=0.919, val_precision=0.907, val_recall=0.936, val_f1=0.921
-# ```
-# """
+> 💡**NOTE**💡 1epoch별로 GPU P100기준 약50분, GPU V100기준 ~15분이 걸립니다. <br>
+> 학습시 약 0.92 이하의 validation acc를 얻을 수 있습니다.
 
-# print("Using PyTorch Ver", torch.__version__)
-# print("Fix Seed:", args['random_seed'])
-# seed_everything(args['random_seed'])
-# model = Model(**args)
+> Update @ 2020.09.01
+> 최근 Colab Pro에서 V100이 배정됩니다.
 
-# print(":: Start Training ::")
-# trainer = Trainer(
-#     callbacks=[checkpoint_callback],
-#     max_epochs=args['epochs'],
-#     fast_dev_run=args['test_mode'],
-#     num_sanity_val_steps=None if args['test_mode'] else 0,
-#     # For GPU Setup
-#     deterministic=torch.cuda.is_available(),
-#     gpus=[0] if torch.cuda.is_available() else None,  # 0번 idx GPU  사용
-#     precision=16 if args['fp16'] and torch.cuda.is_available() else 32,
-#     # For TPU Setup
-#     # tpu_cores=args['tpu_cores'] if args['tpu_cores'] else None,
-# )
-# trainer.fit(model)
+```python
+# 1epoch
+loss=0.207, v_num=0, val_loss=0.221, val_acc=0.913, val_precision=0.914, val_recall=0.913, val_f1=0.914
+# 2epoch
+loss=0.152, v_num=0, val_loss=0.213, val_acc=0.918, val_precision=0.912, val_recall=0.926, val_f1=0.919
+# 3epoch
+loss=0.135, v_num=0, val_loss=0.225, val_acc=0.919, val_precision=0.907, val_recall=0.936, val_f1=0.921
+```
+"""
+
+print("Using PyTorch Ver", torch.__version__)
+print("Fix Seed:", args['random_seed'])
+seed_everything(args['random_seed'])
+model = Model(**args)
+
+print(":: Start Training ::")
+trainer = Trainer(
+    callbacks=[checkpoint_callback],
+    max_epochs=args['epochs'],
+    fast_dev_run=args['test_mode'],
+    num_sanity_val_steps=None if args['test_mode'] else 0,
+    # For GPU Setup
+    deterministic=torch.cuda.is_available(),
+    gpus=[0] if torch.cuda.is_available() else None,  # 0번 idx GPU  사용
+    precision=16 if args['fp16'] and torch.cuda.is_available() else 32,
+    callbacks = [early_stop_callback, checkpoint_callback]
+    # For TPU Setup
+    # tpu_cores=args['tpu_cores'] if args['tpu_cores'] else None,
+)
+trainer.fit(model)
 
 """# Inference"""
 

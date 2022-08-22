@@ -292,7 +292,6 @@ model = Model(**args)
 
 print(":: Start Training ::")
 trainer = Trainer(
-    callbacks=[checkpoint_callback],
     max_epochs=args['epochs'],
     fast_dev_run=args['test_mode'],
     num_sanity_val_steps=None if args['test_mode'] else 0,

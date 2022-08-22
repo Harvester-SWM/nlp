@@ -58,14 +58,14 @@ python3 message.py \
 --now_number ${NOW_TEST_NUMBER} \
 --total_number ${TOTAL_TEST_NUMBER} \
 
-echo "
-python3 trainnig.py \
---model_task ${model_task_list[$i]} \
---pretrained_model ${pretrained_model_list[$j]} \
---lr ${lr} \
---sensitive ${sensitive} \
---test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
-" 
+#echo "
+#python3 trainnig.py \
+#--model_task ${model_task_list[$i]} \
+#--pretrained_model ${pretrained_model_list[$j]} \
+#--lr ${lr} \
+#--sensitive ${sensitive} \
+#--test_name ${model_task_str[$i]}_${pretrained_model_str[$j]}_${lr}_${sensitive}
+#" 
 python3 trainning.py \
 --model_task ${model_task_list[$i]} \
 --pretrained_model ${pretrained_model_list[$j]} \

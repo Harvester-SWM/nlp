@@ -15,7 +15,7 @@ from glob import glob
 #   print(infer(sentence))
 
 
-MODEL_PATH = "./checkpoint/multi/epoch=1-val_loss=0.23.ckpt"
+MODEL_PATH = "./checkpoint/multi_kcbert-l_0.000005_0/epoch=1-val_loss=0.35.ckpt"
 #HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
 
 latest_ckpt = sorted(glob(MODEL_PATH))[0]
@@ -33,6 +33,7 @@ def main():
 def infer(x):
     return model(**model.tokenizer(x, return_tensors='pt'))
 def judge(sentence):
+    sentence=str(sentence)
     if sentence == "":
         print("빈 문장")
     else:
@@ -43,8 +44,10 @@ def judge(sentence):
         output = output.detach().flatten().numpy()
         for i in zip(LABEL_COLUMNS, output):
             if i[1] > 0.5:
-                print(f"{i[0]} {i[1]}에 해당합니다")
+                #print(f"{i[0]} {i[1]}에 해당합니다")
+                return 1
             #print(f'probability : {prediction}')
+        return 0
     
 if __name__ == "__main__":
     #print("workign?")

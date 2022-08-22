@@ -11,7 +11,7 @@ import single_task_model
 #   print(infer(sentence))
 
 
-MODEL_PATH = "./lightning_logs/version_2/checkpoints/*.ckpt"
+MODEL_PATH = "./checkpoint/single_kcbert-l_0.000005_0/epoch=2-val_loss=0.07.ckpt"
 #HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
 
 from glob import glob
@@ -30,6 +30,7 @@ def main():
 def infer(x):
     return model(**model.tokenizer(x, return_tensors='pt'))
 def judge(sentence):
+    sentence=str(sentence)
     if sentence == "":
         print("빈 문장")
     else:
@@ -38,9 +39,11 @@ def judge(sentence):
         output = torch.sigmoid(test_prediction.logits)
         output = output.detach().flatten().numpy()
         for i in zip(LABEL_COLUMNS, output):
-            #if i[1] > 0.5:
-            print(i)
-            #print(f'probability : {prediction}')
+            if i[1] > 0.5:
+                return 1
+                #print(i)
+                #print(f'probability : {prediction}')
+        return 0
     
 if __name__ == "__main__":
     main()

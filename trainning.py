@@ -68,9 +68,9 @@ user_input = parser.parse_args()
 
 # user_input 에서 받은 model_task를 기준으로 import 할 모듈을 정한다.
 if user_input.model_task == 'multi_task_model':
-    from multi_task_model import Model
+    from model.multi_task_model import Model
 elif user_input.model_task == 'single_task_model':
-    from single_task_model import Model
+    from model.single_task_model import Model
 else:
     print(user_input.model_task)
     raise NotImplementedError('Only single or multitask_model supported!')
@@ -149,28 +149,6 @@ seed_everything(args['random_seed'])
 print(":: Start Training ::")
 trainer.fit(model)
 
-
-TEST = False
-
-if TEST == True:
-    def infer(x):
-        return model(**model.tokenizer(x, return_tensors='pt'))
-
-    def judge(sentence):
-        if sentence == "":
-            print("빈 문장")
-        else:
-            LABEL_COLUMNS=["욕설","모욕","폭력위협/범죄조장","외설","성혐오","연령","인종/출신지","장애","종교","정치성향","직업혐오"]
-            test_prediction = infer(sentence)
-            output = torch.sigmoid(test_prediction.logits)
-            output = output.detach().flatten().numpy()
-            for i in zip(LABEL_COLUMNS, output):
-                #if i[1] > 0.5:
-                print(i)
-                #print(f'probability : {prediction}')
-    while True:
-        sentence = input("문장을 입력하시오 : ")
-        judge(sentence)
 """# 학습!
 
 > 주의: 1epoch별로 GPU-P100기준 약 2~3시간, GPU V100기준 ~40분이 걸립니다.

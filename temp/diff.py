@@ -1,9 +1,10 @@
 
 
-f = open('proto.txt', 'r')
+f = open('diff.txt', 'r')
 
 lines = f.readlines()
 
+f = open("only_multi.txt", 'w')
 
 for line in lines:
     #print(line)
@@ -21,9 +22,10 @@ for line in lines:
     #print(line[3])
     #print(line[4])
     #mul sin inf pred sentence
-    if line[0][1] == '1' and line[1][1] == '1' and line[2][1] == '0' and line[3][1] == '1':
-        print(line[4][1])
+    if line[0][1] == '1' and line[1][1] == '0' and line[2][1] == '0' and line[3][1] == '1':
+        print(line[4][1], file=f)
 
 
+f.close()
     
-    """if문 달아서 print"""
+"""if문 달아서 print"""

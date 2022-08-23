@@ -71,6 +71,8 @@ if user_input.model_task == 'multi_task_model':
     from multi_task_model import Model
 elif user_input.model_task == 'single_task_model':
     from single_task_model import Model
+elif user_input.model_task == 'smile_gate':
+    from inferTest import Model
 else:
     print(user_input.model_task)
     raise NotImplementedError('Only single or multitask_model supported!')

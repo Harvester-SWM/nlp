@@ -191,10 +191,10 @@ class Model(LightningModule):
         df['내용'] = df['내용'].map(self.encode)
         return df
     
-    def subDataframe(self, main_df, LABEL_COLUMNS):
+    def subDataframe(self, df, LABEL_COLUMNS):
         write_list = []
         
-        for index, row in main_df.iterrows():
+        for index, row in df.iterrows():
             result = 0
             for i in LABEL_COLUMNS:
                 if row[i] > self.hparams.sensitive:
@@ -210,9 +210,13 @@ class Model(LightningModule):
         df = self.read_data(path)
         df = self.preprocess_dataframe(df)
 
+        LABEL_COLUMNS = df.columns.tolist()[1:]
+
+        label_df = self.subDataframe(df, LABEL_COLUMNS)
+
         dataset = TensorDataset(
             torch.tensor(df['내용'].to_list(), dtype=torch.long),
-            torch.tensor(df['악플'].to_list(), dtype=torch.long),
+            torch.tensor(label_df['악플'].to_list(), dtype=torch.long),
         )
         return DataLoader(
             dataset,

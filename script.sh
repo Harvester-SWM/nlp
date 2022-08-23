@@ -30,11 +30,11 @@ END
 python3 message.py --command "start"
 
 
-model_task_list=("multi_task_model")
-model_task_str=("multi")
+model_task_list=("smile_gate")
+model_task_str=("smile")
 
-pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "monologg/kobert" "skt/kobert-base-v1")
-pretrained_model_str=("kcbert-l" "kcbert-b" "kobert" "sk-bert-b")
+pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "monologg/kobert" "skt/kobert-base-v1" "beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
+pretrained_model_str=("kcbert-l" "kcbert-b" "kobert" "sk-bert-b" "kcelec" "koelec-b" "koelec-s")
 lr_list=(0.000005 0.000001)
 sensitive_list=(0 1)
 

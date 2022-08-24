@@ -65,25 +65,6 @@ import emoji
 from soynlp.normalizer import repeat_normalize
 
 """## 기본 학습 Arguments"""
-
-args = {
-    'random_seed': 42, # Random Seed
-    'pretrained_model': 'beomi/kcbert-large',  # Transformers PLM name
-    'pretrained_tokenizer': '',  # Optional, Transformers Tokenizer Name. Overrides `pretrained_model`
-    'batch_size': 64,
-    'lr': 5e-6,  # Starting Learning Rate
-    'epochs': 10,  # Max Epochs
-    'max_length': 150,  # Max Length input size
-    'train_data_path': "data/train_500000.tsv",  # Train Dataset file 
-    'val_data_path': "data/valid_500000.tsv",  # Validation Dataset file 
-    'test_mode': False,  # Test Mode enables `fast_dev_run`
-    'optimizer': 'AdamW',  # AdamW vs AdamP
-    'lr_scheduler': 'exp',  # ExponentialLR vs CosineAnnealingWarmRestarts
-    'fp16': True,  # Enable train on FP16(if GPU)
-    'tpu_cores': 0,  # Enable TPU with 1 core or 8 cores
-    'cpu_workers': os.cpu_count(),
-}
-
 # """# Model 만들기 with Pytorch Lightning"""
 
 class Model(LightningModule):
@@ -207,13 +188,13 @@ class Model(LightningModule):
         )
 
     def preprocess_dataframe(self, df):
-        df['document'] = df['document'].map(self.encode)
+        df['내용'] = df['내용'].map(self.encode)
         return df
     
-    def subDataframe(self, main_df, LABEL_COLUMNS):
+    def subDataframe(self, df, LABEL_COLUMNS):
         write_list = []
         
-        for index, row in main_df.iterrows():
+        for index, row in df.iterrows():
             result = 0
             for i in LABEL_COLUMNS:
                 if row[i] > self.hparams.sensitive:
@@ -229,9 +210,13 @@ class Model(LightningModule):
         df = self.read_data(path)
         df = self.preprocess_dataframe(df)
 
+        LABEL_COLUMNS = df.columns.tolist()[1:]
+
+        label_df = self.subDataframe(df, LABEL_COLUMNS)
+
         dataset = TensorDataset(
-            torch.tensor(df['document'].to_list(), dtype=torch.long),
-            torch.tensor(df['label'].to_list(), dtype=torch.long),
+            torch.tensor(df['내용'].to_list(), dtype=torch.long),
+            torch.tensor(label_df['악플'].to_list(), dtype=torch.long),
         )
         return DataLoader(
             dataset,
@@ -245,27 +230,6 @@ class Model(LightningModule):
 
     def val_dataloader(self):
         return self.dataloader(self.hparams.val_data_path, shuffle=False)
-
-from pytorch_lightning.callbacks import ModelCheckpoint
-
-checkpoint_callback = ModelCheckpoint(
-    filename='epoch{epoch}-val_acc{val_acc:.4f}',
-    monitor='val_acc',
-    save_top_k=3,
-    mode='max',
-    auto_insert_metric_name=False,
-)
-
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-
-early_stop_callback = EarlyStopping(
-        monitor="val_loss",
-        min_delta=0.00,
-        patience=3,
-        verbose=True,
-        mode="min",
-        check_on_train_epoch_end=True
-    )
 
 """# 학습!
 

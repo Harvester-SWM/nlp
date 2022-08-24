@@ -27,11 +27,14 @@ END
 
 #python3 trainning.py --model_task multi_task_model --pretrained_model beomi/KcELECTRA-base --lr 0.000005 --sensitive 1 --test_name multi_kcelec_0.000005_1
 
-model_task_list=("single_task_model" "multi_task_model")
-model_task_str=("single" "multi")
+python3 message.py --command "start"
 
-pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "HanBert-54kN-torch" "beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
-pretrained_model_str=("kcbert-l" "kcbert-b" "Hanbert" "kcelec" "koelec-b" "koelec-s")
+
+model_task_list=("smile_gate")
+model_task_str=("smile")
+
+pretrained_model_list=("beomi/kcbert-large" "beomi/kcbert-base" "monologg/kobert" "skt/kobert-base-v1" "beomi/KcELECTRA-base" "monologg/koelectra-base-v3-discriminator" "monologg/koelectra-small-v3-discriminator")
+pretrained_model_str=("kcbert-l" "kcbert-b" "kobert" "sk-bert-b" "kcelec" "koelec-b" "koelec-s")
 lr_list=(0.000005 0.000001)
 sensitive_list=(0 1)
 

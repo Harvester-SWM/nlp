@@ -13,13 +13,13 @@ import inferTest
 
 
 
-MODEL_PATH = "./lightning_logs/version_5/checkpoints/*.ckpt"
-HPARAMS_PATH = "./lightning_logs/version_5/hparams.yaml"
+MODEL_PATH = "./checkpoint/smile_kcbert-b_0.000005_0/epoch=0-val_loss=0.31.ckpt"
+#HPARAMS_PATH = "./lightning_logs/version_5/hparams.yaml"
 
 from glob import glob
 
 latest_ckpt = sorted(glob(MODEL_PATH))[0]
-model = inferTest.Model.load_from_checkpoint(latest_ckpt, hparams_file=HPARAMS_PATH)
+model = inferTest.Model.load_from_checkpoint(latest_ckpt)
 model.eval()
 #map location 해주면 환경 바뀌어도 가능
 def main():

@@ -142,10 +142,10 @@ class Model(LightningModule):
         print(f'acc : {total_acc : .5f} | prec : {total_prec : .5f} | rec : {total_rec : .5f} | f1 : {total_f1 : .5f}', file=result)
         
         self.log(state+'_loss', float(loss), on_epoch=True, prog_bar=True)
-        self.log(state+'_acc', float(loss), on_epoch=True, prog_bar=True)
-        self.log(state+'_prec', float(loss), on_epoch=True, prog_bar=True)
-        self.log(state+'_rec', float(loss), on_epoch=True, prog_bar=True)
-        self.log(state+'_f1', float(loss), on_epoch=True, prog_bar=True)
+        self.log(state+'_acc', float(total_acc), on_epoch=True, prog_bar=True)
+        self.log(state+'_prec', float(total_prec), on_epoch=True, prog_bar=True)
+        self.log(state+'_rec', float(total_rec), on_epoch=True, prog_bar=True)
+        self.log(state+'_f1', float(total_f1), on_epoch=True, prog_bar=True)
         
         #file close
         result.close()

@@ -14,7 +14,6 @@ from sklearn.metrics import multilabel_confusion_matrix
 import re
 import emoji
 from soynlp.normalizer import repeat_normalize
-from soynlp.normalizer import repeat_normalize
 
 """# Model 만들기 with Pytorch Lightning"""
 
@@ -192,7 +191,7 @@ class Model(LightningModule):
             raise NotImplementedError('Only Excel(xlsx)/Csv/Tsv(txt) are Supported')
 
     def clean(self, x):
-        emojis = ''.join(emoji.UNICODE_EMOJI.keys())
+        emojis = ''.join(emoji.EMOJI_DATA.keys()) 
         pattern = re.compile(f'[^ .,?!/@$%~％·∼()\x00-\x7Fㄱ-힣{emojis}]+')
         url_pattern = re.compile(
             r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)')

@@ -3,7 +3,7 @@ import numpy as np
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from torch.optim.lr_scheduler import ExponentialLR, CosineAnnealingWarmRestarts
+#from torch.optim.lr_scheduler import ExponentialLR, CosineAnnealingWarmRestarts
 
 from pytorch_lightning import LightningModule
 

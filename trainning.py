@@ -150,20 +150,3 @@ print("Fix Seed:", args['random_seed'])
 seed_everything(args['random_seed'])
 print(":: Start Training ::")
 trainer.fit(model)
-
-"""# 학습!
-
-> 주의: 1epoch별로 GPU-P100기준 약 2~3시간, GPU V100기준 ~40분이 걸립니다.
-
-> Update @ 2020.09.01
-> 최근 Colab Pro에서 V100이 배정됩니다.
-
-```python
-# 1epoch 기준 아래 score가 나옵니다.
-{'val_acc': 0.90522,
-'val_f1': 0.9049023739289227,
-'val_loss': 0.23429009318351746,
-'val_precision': 0.9143146796431468,
-'val_recall': 0.8956818813808446}
-```
-"""

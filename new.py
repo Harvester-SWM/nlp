@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-import multi_infer
+import infer.multi_infer
 
 
 PATH = "./test.txt"
@@ -18,7 +18,7 @@ f1 = open(TEMP_WRITE, 'w')
 lines = f.readlines()
 
 for line in lines:
-    if multi_infer.judge(line) == 1:
+    if infer.multi_infer.judge(line) == 1:
         print(line.strip(), file=f1)
 
 

@@ -1,25 +1,23 @@
 import torch
 import sys
+import os
 from pytorch_lightning import LightningModule, Trainer, seed_everything
-import inferTest
 
-# loop = True;
+# inferTest 불러오기
+root_path = sys.path[0]
+model_path = os.path.join(root_path, '../models')
+sys.path.append(model_path)
+# inferTest 불러오기
 
-# while loop: 
-#   sentence = input("하고싶은 말을 입력해주세요 : ") 
-#   if sentence == 0: 
-#     break;
-#   print(infer(sentence))
-
+from inferTest import Model
 
 
-MODEL_PATH = "./checkpoint/smile_kcbert-b_0.000005_0/epoch=0-val_loss=0.31.ckpt"
-#HPARAMS_PATH = "./lightning_logs/version_5/hparams.yaml"
+MODEL_PATH = "../checkpoint/smile_kcbert-b_0.000005_0/epoch=0-val_loss=0.31.ckpt"
 
 from glob import glob
 
 latest_ckpt = sorted(glob(MODEL_PATH))[0]
-model = inferTest.Model.load_from_checkpoint(latest_ckpt)
+model = Model.load_from_checkpoint(latest_ckpt)
 model.eval()
 #map location 해주면 환경 바뀌어도 가능
 def main():

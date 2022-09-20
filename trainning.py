@@ -68,11 +68,11 @@ user_input = parser.parse_args()
 
 # user_input 에서 받은 model_task를 기준으로 import 할 모듈을 정한다.
 if user_input.model_task == 'multi_task_model':
-    from multi_task_model import Model
+    from models.multi_task_model import Model
 elif user_input.model_task == 'single_task_model':
-    from single_task_model import Model
+    from models.single_task_model import Model
 elif user_input.model_task == 'smile_gate':
-    from inferTest import Model
+    from models.inferTest import Model
 else:
     print(user_input.model_task)
     raise NotImplementedError('Only single or multitask_model supported!')

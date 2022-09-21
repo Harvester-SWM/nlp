@@ -5,7 +5,6 @@ from pickle import FALSE
 import torch
 import json
 
-
 from glob import glob
 
 
@@ -18,15 +17,6 @@ sys.path.append(model_path)
 from multi_task_model import Model
 
 
-MODEL_PATH = "../checkpoint/multi_kcbert-l_0.000005_0/epoch=1-val_loss=0.35.ckpt"
-#HPARAMS_PATH = "./lightning_logs/version_2/hparams.yaml"
-
-latest_ckpt = sorted(glob(MODEL_PATH))[0]
-#model = trainning.Model.load_from_checkpoint(latest_ckpt, hparams_file=HPARAMS_PATH)
-
-model = Model.load_from_checkpoint(latest_ckpt)
-
-model.eval()
 #map location 해주면 환경 바뀌어도 가능
 def main():
     while True:
@@ -53,5 +43,17 @@ def judge(sentence):
         return dict(zip(LABEL_COLUMNS, output))
     
 if __name__ == "__main__":
-    #print("workign?")
-    main()
+    
+    # 모델 경로
+    MODEL_PATH = "../checkpoint/multi_kcbert-l_0.000005_0/epoch=1-val_loss=0.35.ckpt"
+    # 사용할 모델 지정
+    latest_ckpt = sorted(glob(MODEL_PATH))[0]
+    
+    # 모델 로드함 (프로그램 종료되면 다시  load 해야함)
+    model = Model.load_from_checkpoint(latest_ckpt)
+    # 모델 load 하는 과정에서 불 필요한 함수 제거
+    model.eval()
+    
+
+# 문장을 평가하는 함수
+main()

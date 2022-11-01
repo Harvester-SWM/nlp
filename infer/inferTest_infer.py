@@ -10,6 +10,7 @@ sys.path.append(model_path)
 # inferTest 불러오기
 
 from inferTest import Model
+from clean import clean
 
 
 MODEL_PATH = "../checkpoint/smile_kcbert-b_0.000005_0/epoch=0-val_loss=0.31.ckpt"
@@ -38,7 +39,7 @@ def judge(sentence):
     if sentence == "":
         print("빈 문장")
     else:
-        toxic = torch.argmax(infer(sentence))
+        toxic = torch.argmax(infer(clean(sentence)))
         #print(infer(sentence))
 
         # if toxic == 0:

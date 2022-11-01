@@ -6,6 +6,7 @@ import torch
 import json
 
 from glob import glob
+from clean import clean
 
 
 # inferTest 불러오기
@@ -31,7 +32,7 @@ def judge(sentence):
         print("빈 문장")
     else:
         LABEL_COLUMNS=["욕설","모욕","폭력위협/범죄조장","외설","성혐오","연령","인종/출신지","장애","종교","정치성향","직업혐오"]
-        test_prediction, _ = infer(sentence)
+        test_prediction, _ = infer(clean(sentence))
         #print(test_prediction)
         output = torch.sigmoid(test_prediction[1])
         output = output.detach().flatten().numpy()
